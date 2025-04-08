@@ -1,84 +1,117 @@
 // src/App.tsx
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from './store';
-import { addDaily } from './features/performance/performanceSlice';
 import {
-  Container,
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+} from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
   Typography,
-  TextField,
   Button,
+  Box,
+  IconButton,
+  Drawer,
   List,
   ListItem,
-  Box,
+  ListItemText,
 } from '@mui/material';
-import ChartPerformance from './components/ChartPerformance';
+import MenuIcon from '@mui/icons-material/Menu';
+import { useTheme, useMediaQuery } from '@mui/material';
+import DashboardPage from './pages/DashboardPage';
+import HistoryPage from './pages/HistoryPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import CalendarPage from './pages/CalendarPage';
 
-function App() {
-  const dispatch = useDispatch();
-  const dailyData = useSelector((state: RootState) => state.performance.daily);
-  const [inputValue, setInputValue] = useState('');
+const App: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const num = parseFloat(inputValue);
-    if (!isNaN(num)) {
-      dispatch(addDaily(num));
-      setInputValue('');
-    }
+  const toggleDrawer = (open: boolean) => () => {
+    setDrawerOpen(open);
   };
 
-  // Compute aggregates: total count and average value
-  const totalEntries = dailyData.length;
-  const sum = dailyData.reduce((acc, value) => acc + value, 0);
-  const average = totalEntries ? (sum / totalEntries).toFixed(2) : 0;
+  const navLinks = [
+    { title: 'Dashboard', path: '/' },
+    { title: 'History', path: '/history' },
+    { title: 'Analytics', path: '/analytics' },
+    { title: 'Calendar', path: '/calendar' },
+  ];
+
+  const drawerContent = (
+    <Box
+      sx={{ width: 250 }}
+      role="presentation"
+      onClick={toggleDrawer(false)}
+      onKeyDown={toggleDrawer(false)}
+    >
+      <List>
+        {navLinks.map((link) => (
+          <ListItem
+            key={link.title}
+            component={Link}
+            to={link.path}
+            sx={{ cursor: 'pointer' }} // Mimic button behavior
+          >
+            <ListItemText primary={link.title} />
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Performance Tracker
-      </Typography>
+    <Router>
+      <AppBar position="static">
+        <Toolbar>
+          {isMobile && (
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={toggleDrawer(true)}
+              sx={{ mr: 2 }}
+              aria-label="menu"
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Performance Tracker for Magare
+          </Typography>
+          {!isMobile && (
+            <>
+              {navLinks.map((link) => (
+                <Button
+                  key={link.title}
+                  color="inherit"
+                  component={Link}
+                  to={link.path}
+                >
+                  {link.title}
+                </Button>
+              ))}
+            </>
+          )}
+        </Toolbar>
+      </AppBar>
 
-      <form onSubmit={handleSubmit}>
-        <TextField
-          label="Enter performance value"
-          variant="outlined"
-          fullWidth
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-        <Button type="submit" variant="contained" color="primary" fullWidth>
-          Submit
-        </Button>
-      </form>
-
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h5" component="h2">
-          Daily Data
-        </Typography>
-        <List>
-          {dailyData.map((data, index) => (
-            <ListItem key={index}>{data}</ListItem>
-          ))}
-        </List>
-      </Box>
+      <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
+        {drawerContent}
+      </Drawer>
 
       <Box sx={{ mt: 2 }}>
-        <Typography variant="subtitle1">
-          Total Entries: {totalEntries}
-        </Typography>
-        <Typography variant="subtitle1">
-          Average Performance: {average}
-        </Typography>
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+        </Routes>
       </Box>
-
-      {/* Visualization will be added in the next step */}
-      <Box sx={{ mt: 4 }}>
-        <ChartPerformance dailyData={dailyData} />
-      </Box>
-    </Container>
+    </Router>
   );
-}
+};
 
 export default App;
