@@ -1,17 +1,20 @@
 // src/hooks/usePerformanceEntries.ts
+
 import { useState, useEffect } from "react";
 import { PerformanceEntry } from "../features/performance/performanceSlice";
-import { getPerformanceEntries } from "../services/performanceService";
+import { subscribePerformanceEntries } from "../services/performanceService";
 
 const usePerformanceEntries = () => {
   const [entries, setEntries] = useState<PerformanceEntry[]>([]);
 
   useEffect(() => {
-    async function fetchData() {
-      const fetchedEntries = await getPerformanceEntries();
+    // Use the onSnapshot subscription for real-time updates
+    const unsubscribe = subscribePerformanceEntries((fetchedEntries) => {
       setEntries(fetchedEntries);
-    }
-    fetchData();
+    });
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return entries;

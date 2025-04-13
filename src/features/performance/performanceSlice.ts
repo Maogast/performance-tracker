@@ -3,10 +3,11 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // Define the structure of a performance entry
 export interface PerformanceEntry {
+  id?: string;           // Optional Firestore document ID
   value: number;
-  timestamp: number; // Unix timestamp or a formatted date string
-  note?: string;     // Optional note for the entry
-  category?: string; // New optional field for categorization
+  timestamp: number | Date; // Unix timestamp or Date object
+  note?: string;         // Optional note for the entry
+  category?: string;     // Optional field for categorization
 }
 
 // Define the state structure
@@ -28,19 +29,19 @@ const performanceSlice = createSlice({
     addDaily: (state, action: PayloadAction<PerformanceEntry>) => {
       state.daily.push(action.payload);
     },
-    // Remove a performance entry by timestamp
-    removeDaily: (state, action: PayloadAction<number>) => {
+    // Remove a performance entry by its id
+    removeDaily: (state, action: PayloadAction<string>) => {
       state.daily = state.daily.filter(
-        (entry) => entry.timestamp !== action.payload
+        (entry) => entry.id !== action.payload
       );
     },
-    // Update a performance entry by timestamp
+    // Update a performance entry by its id
     updateDaily: (
       state,
-      action: PayloadAction<{ timestamp: number; updatedEntry: PerformanceEntry }>
+      action: PayloadAction<{ id: string; updatedEntry: PerformanceEntry }>
     ) => {
       const index = state.daily.findIndex(
-        (entry) => entry.timestamp === action.payload.timestamp
+        (entry) => entry.id === action.payload.id
       );
       if (index !== -1) {
         state.daily[index] = action.payload.updatedEntry;
